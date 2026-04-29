@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>People Analytics — The Signal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f1117; --ink-mid: #3a3d4a; --ink-soft: #717585; --ink-faint: #a8aab8;
+    --surface: #f7f7f9; --surface-alt: #eeeef3; --white: #ffffff;
+    --accent: #0066cc; --accent-light: #e8f0fb; --accent-mid: #4d94e0;
+    --teal: #00897b; --teal-light: #e0f2f0;
+    --amber: #c97a00; --amber-light: #fff3e0;
+    --coral: #c94f35; --coral-light: #fdecea;
+    --green: #2e7d32; --green-light: #e8f5e9;
+    --violet: #5b21b6; --violet-light: #ede9fe;
+    --border: rgba(15,17,23,0.1); --border-strong: rgba(15,17,23,0.18);
+    --radius: 10px; --radius-sm: 6px;
+    --shadow: 0 2px 12px rgba(15,17,23,0.07), 0 1px 3px rgba(15,17,23,0.05);
+    --shadow-md: 0 4px 24px rgba(15,17,23,0.1), 0 2px 6px rgba(15,17,23,0.06);
+    --header-bg: #ffffff; --body-bg: #f7f7f9; --card-bg: #ffffff;
+  }
+  body.dark {
+    --ink: #eeeef3; --ink-mid: #c0c2cc; --ink-soft: #8a8c99; --ink-faint: #5a5c6e;
+    --surface: #0f1117; --surface-alt: #1a1c22; --white: #1e2028;
+    --accent: #4d94e0; --accent-light: #1a2a40; --accent-mid: #6aabf0;
+    --teal: #4db6ac; --teal-light: #0d2926;
+    --amber: #ffb74d; --amber-light: #2a1f0a;
+    --coral: #ef7b62; --coral-light: #2a1210;
+    --green: #66bb6a; --green-light: #0d2010;
+    --violet: #a78bfa; --violet-light: #2e1065;
+    --border: rgba(238,238,243,0.12); --border-strong: rgba(238,238,243,0.22);
+    --header-bg: #14161e; --body-bg: #0f1117; --card-bg: #1a1c24;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--body-bg); color: var(--ink); min-height: 100vh; font-size: 15px; line-height: 1.6; transition: background 0.2s, color 0.2s; }
+  .site-header { background: var(--header-bg); border-bottom: 1px solid var(--border); padding: 0 2rem; position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; gap: 1rem; flex-wrap: wrap; }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .nav-back { font-size: 13px; color: var(--ink-soft); text-decoration: none; display: flex; align-items: center; gap: 5px; transition: color 0.12s; }
+  .nav-back:hover { color: var(--accent); }
+  .divider-v { width: 1px; height: 24px; background: var(--border-strong); }
+  .header-title h1 { font-family: 'DM Serif Display', serif; font-size: 1.1rem; font-weight: 400; color: var(--ink); line-height: 1.2; }
+  .header-title .subtitle { font-size: 11px; color: var(--ink-soft); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 1px; font-weight: 500; }
+  .header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .badge { font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.04em; white-space: nowrap; }
+  .badge-teal { background: var(--teal-light); color: var(--teal); border: 1px solid rgba(0,137,123,0.15); }
+  .badge-green { background: var(--green-light); color: var(--green); border: 1px solid rgba(46,125,50,0.15); }
+  .badge-amber { background: var(--amber-light); color: var(--amber); border: 1px solid rgba(201,122,0,0.15); }
+  .badge-violet { background: var(--violet-light); color: var(--violet); border: 1px solid rgba(91,33,182,0.15); }
+  .hdr-btn { display: flex; align-items: center; gap: 5px; font-size: 12px; padding: 5px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); background: transparent; color: var(--ink-soft); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.12s; white-space: nowrap; }
+  .hdr-btn:hover { background: var(--surface-alt); color: var(--ink); }
+  .hdr-btn.copied { background: var(--green-light); color: var(--green); border-color: var(--green); }
+  .page-hero { background: linear-gradient(135deg, #0f1f3d 0%, #1a2f5a 100%); padding: 3rem 2rem 2.5rem; }
+  .page-hero-inner { max-width: 1100px; margin: 0 auto; }
+  .hero-breadcrumb { font-size: 12px; color: #7a9cc8; margin-bottom: 1rem; display: flex; align-items: center; gap: 6px; }
+  .hero-breadcrumb a { color: #a8c4e8; text-decoration: none; }
+  .hero-breadcrumb a:hover { color: #fff; }
+  .page-hero h1 { font-family: 'DM Serif Display', serif; font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 400; color: #fff; line-height: 1.1; margin-bottom: 0.75rem; }
+  .page-hero h1 em { font-style: italic; color: #a8c4e8; }
+  .page-hero-desc { font-size: 15px; color: #a8c4e8; line-height: 1.75; max-width: 680px; margin-bottom: 1.5rem; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .meta-chip { font-size: 11px; padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); color: #a8c4e8; }
+  .meta-cta-chip { display: none; font-size: 11px; padding: 4px 12px; border-radius: 12px; background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.25); text-decoration: none; transition: background 0.15s; }
+  .meta-cta-chip:hover { background: rgba(255,255,255,0.2); }
+  .main { max-width: 1100px; margin: 0 auto; padding: 1.5rem 2rem 3rem; }
+  .reviewed-notice { font-size: 11px; color: var(--ink-faint); text-align: right; margin-bottom: 1rem; font-style: italic; }
+  .stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 12px; margin-bottom: 1.5rem; margin-top: 1.5rem; }
+  .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; box-shadow: var(--shadow); }
+  .stat-label { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; margin-bottom: 6px; }
+  .stat-sub { font-size: 11px; color: var(--ink-faint); margin-top: 4px; }
+  .search-wrap { margin-bottom: 1.5rem; position: relative; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink-faint); pointer-events: none; }
+  #search-input { width: 100%; padding: 9px 12px 9px 34px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card-bg); color: var(--ink); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+  #search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,102,204,0.1); }
+  #search-input::placeholder { color: var(--ink-faint); }
+  .search-results { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-md); z-index: 200; display: none; max-height: 300px; overflow-y: auto; }
+  .search-results.visible { display: block; }
+  .sr-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; text-decoration: none; transition: background 0.1s; }
+  .sr-item:last-child { border-bottom: none; }
+  .sr-item:hover { background: var(--surface-alt); }
+  .sr-type { font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 6px; background: var(--accent-light); color: var(--accent); white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+  .sr-title { font-size: 13px; color: var(--ink); line-height: 1.4; }
+  .sr-desc { font-size: 11px; color: var(--ink-faint); margin-top: 1px; }
+  .search-empty { padding: 14px; font-size: 13px; color: var(--ink-faint); text-align: center; }
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 1.5rem; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 5px; box-shadow: var(--shadow); flex-wrap: wrap; }
+  .tab-btn { padding: 7px 16px; border-radius: var(--radius-sm); border: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 400; color: var(--ink-soft); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .tab-btn:hover { background: var(--surface-alt); color: var(--ink); }
+  .tab-btn.active { background: var(--ink); color: var(--white); font-weight: 500; }
+  .section { display: none; }
+  .section.active { display: block; }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px,1fr)); gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 16px; margin-bottom: 16px; }
+  .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; box-shadow: var(--shadow); }
+  .card-title { font-size: 11px; font-weight: 500; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 1rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border); }
+  .insight-card { background: var(--card-bg); border: 1px solid var(--border); border-left: 3px solid var(--ic-color, var(--accent)); border-radius: var(--radius); padding: 1.25rem 1.5rem; box-shadow: var(--shadow); margin-bottom: 12px; }
+  .insight-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .insight-name { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.3; }
+  .insight-badge { font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
+  .b-core { background: var(--accent-light); color: var(--accent); }
+  .b-trend { background: var(--teal-light); color: var(--teal); }
+  .b-watch { background: var(--amber-light); color: var(--amber); }
+  .b-data { background: var(--violet-light); color: var(--violet); }
+  .b-framework { background: var(--green-light); color: var(--green); }
+  .insight-desc { font-size: 13px; color: var(--ink-soft); line-height: 1.65; margin-bottom: 10px; }
+  .insight-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+  .insight-tag { font-size: 10px; padding: 2px 7px; border-radius: 7px; background: var(--surface-alt); color: var(--ink-soft); border: 1px solid var(--border); }
+  .source-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .source-row:last-child { border-bottom: none; }
+  .source-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .source-info { flex: 1; min-width: 0; }
+  .source-name { font-size: 13px; font-weight: 500; color: var(--ink); }
+  .source-desc { font-size: 12px; color: var(--ink-soft); margin-top: 1px; }
+  .source-name a { color: var(--ink); text-decoration: none; border-bottom: 1px solid transparent; transition: all 0.12s; }
+  .source-name a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .freq-badge { font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; }
+  .freq-daily { background: var(--teal-light); color: var(--teal); }
+  .freq-weekly { background: var(--accent-light); color: var(--accent); }
+  .freq-monthly { background: var(--amber-light); color: var(--amber); }
+  .pill { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-strong); color: var(--ink-mid); cursor: pointer; transition: all 0.15s; text-decoration: none; display: inline-block; }
+  .pill:hover { background: var(--ink); color: var(--white); border-color: var(--ink); }
+  .rhythm-row { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .rhythm-row:last-child { border-bottom: none; }
+  .rhythm-when { font-size: 11px; font-weight: 500; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.05em; min-width: 80px; padding-top: 2px; flex-shrink: 0; }
+  .rhythm-body { flex: 1; }
+  .rhythm-what { font-size: 13px; color: var(--ink); line-height: 1.5; }
+  .rhythm-src { font-size: 11px; color: var(--ink-faint); margin-top: 3px; }
+  .brief-link { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); text-decoration: none; transition: all 0.12s; }
+  .brief-link:last-child { border-bottom: none; }
+  .brief-link:hover .brief-text { color: var(--accent); }
+  .brief-text { font-size: 13px; color: var(--ink); flex: 1; line-height: 1.4; transition: color 0.12s; }
+  .brief-arrow { font-size: 13px; color: var(--ink-faint); }
+  .live-feed-panel { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; box-shadow: var(--shadow); margin-top: 16px; }
+  .feed-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border); }
+  .feed-title { font-size: 11px; font-weight: 500; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.07em; }
+  .live-dot { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--teal); font-weight: 500; }
+  .live-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--teal); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .feed-tabs { display: flex; gap: 4px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .feed-tab { font-size: 11px; padding: 4px 10px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--ink-soft); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.12s; }
+  .feed-tab.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
+  .feed-tab:hover:not(.active) { background: var(--surface-alt); }
+  .feed-list { min-height: 180px; }
+  .feed-item { display: flex; flex-direction: column; gap: 3px; padding: 10px 0; border-bottom: 1px solid var(--border); text-decoration: none; transition: all 0.12s; }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-item:hover .feed-item-title { color: var(--accent); }
+  .feed-item-source { font-size: 10px; font-weight: 500; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+  .feed-item-title { font-size: 13px; color: var(--ink); line-height: 1.4; transition: color 0.12s; }
+  .feed-item-date { font-size: 11px; color: var(--ink-faint); }
+  .feed-loading { display: flex; align-items: center; justify-content: center; height: 100px; font-size: 13px; color: var(--ink-faint); }
+  .feed-error { font-size: 12px; color: var(--ink-faint); padding: 12px 0; text-align: center; }
+  .feed-footer-note { margin-top: 10px; font-size: 11px; color: var(--ink-faint); }
+  .newsletter-cta { display: none; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; background: var(--accent-light); border: 1px solid rgba(0,102,204,0.2); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-top: 16px; }
+  .cta-text h3 { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+  .cta-text p { font-size: 12px; color: var(--ink-soft); }
+  .cta-btn { font-size: 13px; font-weight: 500; padding: 8px 20px; border-radius: 20px; background: var(--accent); color: white; text-decoration: none; white-space: nowrap; transition: all 0.15s; border: none; cursor: pointer; }
+  .cta-btn:hover { background: var(--accent-mid); transform: translateY(-1px); }
+  .footer-cta { display: none; font-size: 12px; color: var(--ink-soft); text-align: center; padding-top: 0.75rem; border-top: 1px solid var(--border); margin-top: 0.75rem; }
+  .footer-cta a { color: var(--accent); text-decoration: none; }
+  .site-footer { border-top: 1px solid var(--border); background: var(--header-bg); padding: 1.25rem 2rem; margin-top: 3rem; }
+  .footer-inner { max-width: 1100px; margin: 0 auto; }
+  .footer-main { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+  .footer-left { font-size: 12px; color: var(--ink-faint); }
+  .footer-right { display: flex; gap: 14px; flex-wrap: wrap; }
+  .footer-link { font-size: 12px; color: var(--ink-soft); text-decoration: none; transition: color 0.12s; }
+  .footer-link:hover { color: var(--accent); }
+  @media print { .site-header, .search-wrap, .tab-bar, .live-feed-panel, .newsletter-cta, .hdr-btn, .site-footer { display: none !important; } .section { display: block !important; } body { background: white; } }
+  @media (max-width: 640px) { .main { padding: 1rem; } .stat-strip { grid-template-columns: repeat(2,1fr); } .tab-btn { font-size: 12px; padding: 6px 10px; } .page-hero { padding: 2rem 1.25rem 1.75rem; } .header-inner { flex-wrap: wrap; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <a href="https://agentforchange-hr-tech.github.io/the-signal" class="nav-back">← The Signal</a>
+      <div class="divider-v"></div>
+      <div class="header-title">
+        <h1>People Analytics</h1>
+        <div class="subtitle">The Signal · Workforce Intelligence &amp; Data Strategy</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="badge badge-teal">📊 Data Domain</span>
+      <span style="font-size:11px;color:var(--ink-faint);" id="live-date"></span>
+      <button class="hdr-btn" id="share-btn" onclick="copyLink()">Share</button>
+      <button class="hdr-btn" onclick="window.print()">Print</button>
+      <button class="hdr-btn" id="dark-toggle" onclick="toggleDark()">Dark</button>
+    </div>
+  </div>
+</header>
+<div class="page-hero">
+  <div class="page-hero-inner">
+    <div class="hero-breadcrumb">
+      <a href="https://agentforchange-hr-tech.github.io/the-signal">The Signal</a>
+      <span>›</span><span>People Analytics</span>
+    </div>
+    <h1>Data-Driven<br><em>Workforce Intelligence</em></h1>
+    <p class="page-hero-desc">People analytics has evolved from counting headcount to predicting flight risk to — now — deploying AI agents that act on workforce insights autonomously. The organizations winning the talent war in 2026 are not the ones with the most data; they are the ones with the cleanest data, the most connected systems, and the clearest governance. This page tracks the platforms, frameworks, use cases, and practitioners building the infrastructure that turns people data into competitive advantage.</p>
+    <div class="hero-meta">
+      <span class="meta-chip">Updated <span id="hero-date"></span></span>
+      <span class="meta-chip">14 Sources tracked</span><span class="meta-chip">Visier · Eightfold · Lightcast · RedThread · Gartner</span>
+      <a href="YOUR_SUBSTACK_URL" class="meta-cta-chip" id="hero-cta">✉ Subscribe to The Signal →</a>
+    </div>
+  </div>
+</div>
+<main class="main">
+  <div class="reviewed-notice">Content last reviewed: <span id="reviewed-date"></span></div>
+  <div class="stat-strip">
+    <div class="stat-card">
+      <div class="stat-label">Analytics maturity</div>
+      <div class="stat-val" style="font-family:'DM Serif Display',serif;font-size:2rem;color:var(--teal);line-height:1;">5</div>
+      <div class="stat-sub">Levels from reporting to agentic — most orgs at level 1–2</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Retention cost</div>
+      <div class="stat-val" style="font-family:'DM Serif Display',serif;font-size:2rem;color:var(--teal);line-height:1;">200%</div>
+      <div class="stat-sub">Of annual salary to replace a technical employee</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Mastercard hours unlocked</div>
+      <div class="stat-val" style="font-family:'DM Serif Display',serif;font-size:2rem;color:var(--teal);line-height:1;">100K</div>
+      <div class="stat-sub">Via internal mobility platform — skills-based deployment</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">CHRO AI obstacle</div>
+      <div class="stat-val" style="font-family:'DM Serif Display',serif;font-size:2rem;color:var(--teal);line-height:1;">40%</div>
+      <div class="stat-sub">Cite insufficient AI skill gaps in HR as #1 blocker</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Skills-first adopters</div>
+      <div class="stat-val" style="font-family:'DM Serif Display',serif;font-size:2rem;color:var(--teal);line-height:1;">48%</div>
+      <div class="stat-sub">Of large businesses deploying agentic AI — Korn Ferry</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Data governance</div>
+      <div class="stat-val" style="font-family:'DM Serif Display',serif;font-size:2rem;color:var(--teal);line-height:1;">Step 1</div>
+      <div class="stat-sub">Must precede AI deployment — always</div>
+    </div></div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search-input" placeholder="Search topics, sources, frameworks, concepts…" oninput="runSearch(this.value)" onblur="setTimeout(()=>closeSearch(),200)">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showTab('landscape',this)">Analytics Landscape</button>
+    <button class="tab-btn" onclick="showTab('use_cases',this)">Use Cases</button>
+    <button class="tab-btn" onclick="showTab('sources',this)">Sources &amp; Feeds</button>
+    <button class="tab-btn" onclick="showTab('rhythm',this)">Monitoring Rhythm</button>
+    <button class="tab-btn" onclick="showTab('voices',this)">Key Voices</button>
+  </div>
+
+  <div id="landscape" class="section active">
+    <div class="grid-2">
+      <div>
+        <div class="card-title">Where people analytics stands in 2026</div>
+        <div class="insight-card" style="--ic-color:var(--accent);">
+          <div class="insight-header"><div class="insight-name">From Reporting to Prediction to Action</div><span class="insight-badge b-core">Evolution Stage</span></div>
+          <p class="insight-desc">People analytics has moved through three distinct phases: (1) Descriptive — what happened (headcount, turnover, time-to-hire). (2) Predictive — what will happen (flight risk models, talent supply forecasts). (3) Prescriptive/Agentic — what to do about it. Most organizations are somewhere between phases 1 and 2. The leading edge is phase 3: AI agents that not only surface workforce insights but take action — flagging retention risks, triggering development interventions, rebalancing headcount plans in real time.</p>
+          <div class="insight-meta"><span class="insight-tag">Descriptive → Predictive → Prescriptive</span><span class="insight-tag">Agentic analytics</span><span class="insight-tag">Real-time action</span></div>
+        </div>
+        <div class="insight-card" style="--ic-color:var(--teal);">
+          <div class="insight-header"><div class="insight-name">Visier's Analytic AI Agent Platform</div><span class="insight-badge b-trend">2025 Launch</span></div>
+          <p class="insight-desc">Visier launched its Analytic AI Agent Platform — enabling HR and IT teams to create and deploy AI agents that analyze and act on people and work data. In November 2025, Visier introduced Visier MCP (Model Context Protocol) to deliver governed people data into agentic workflows across enterprise systems. Moving beyond traditional people analytics toward agentic workforce intelligence — not just surfacing insights but integrating them into the tools and processes where decisions are made.</p>
+          <div class="insight-meta"><span class="insight-tag">Analytic AI Agents</span><span class="insight-tag">Visier MCP</span><span class="insight-tag">Governed people data</span><span class="insight-tag">Workflow integration</span></div>
+        </div>
+        <div class="insight-card" style="--ic-color:var(--green);">
+          <div class="insight-header"><div class="insight-name">Data Governance as the Foundation</div><span class="insight-badge b-framework">Critical Prerequisite</span></div>
+          <p class="insight-desc">The most common failure mode in people analytics is building sophisticated models on top of unreliable data. Clean people data and governance standards must precede AI deployment — not follow it. This means unified employee identifiers across HRIS, ATS, LMS, and payroll; agreed definitions for key metrics (what counts as a voluntary termination?); and data stewardship ownership within HR. Without this foundation, every analytics output is suspect and every AI agent learns from corrupted inputs.</p>
+          <div class="insight-meta"><span class="insight-tag">Data quality first</span><span class="insight-tag">Unified employee ID</span><span class="insight-tag">Metric definitions</span><span class="insight-tag">Data stewardship</span></div>
+        </div>
+        <div class="insight-card" style="--ic-color:var(--amber);">
+          <div class="insight-header"><div class="insight-name">Skills Intelligence as the New Currency</div><span class="insight-badge b-trend">Strategic Priority</span></div>
+          <p class="insight-desc">The shift to skills-based organizations requires a skills intelligence infrastructure that doesn't yet exist in most companies. Skills taxonomies must connect learning, performance, and career development systems. Internal skill matching must be measured and prioritized before external recruitment. Workforce planning models must incorporate skill acquisition velocity — not just headcount. Platforms like Gloat, Eightfold, Lightcast, and Draup are building the market intelligence layer that sits on top of internal skills data.</p>
+          <div class="insight-meta"><span class="insight-tag">Skills taxonomy</span><span class="insight-tag">Acquisition velocity</span><span class="insight-tag">Internal mobility</span><span class="insight-tag">Market intelligence</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">Analytics maturity model — where is your org?</div>
+          <div class="rhythm-row"><div class="rhythm-when">Level 1</div><div class="rhythm-body"><div class="rhythm-what" style="font-weight:500;">Operational Reporting</div><div class="rhythm-src">Headcount, turnover rates, time-to-hire from a single system. Mostly manual. Reactive. Most HR teams are here.</div></div></div>
+          <div class="rhythm-row"><div class="rhythm-when">Level 2</div><div class="rhythm-body"><div class="rhythm-what" style="font-weight:500;">Cross-System Analytics</div><div class="rhythm-src">Data integrated across HRIS, ATS, LMS. Dashboards and visualizations. Insights are available but not yet predictive.</div></div></div>
+          <div class="rhythm-row"><div class="rhythm-when">Level 3</div><div class="rhythm-body"><div class="rhythm-what" style="font-weight:500;">Predictive Analytics</div><div class="rhythm-src">Flight risk models, talent supply forecasting, diversity pipeline analysis. Models inform decisions but humans still act.</div></div></div>
+          <div class="rhythm-row"><div class="rhythm-when">Level 4</div><div class="rhythm-body"><div class="rhythm-what" style="font-weight:500;">Prescriptive Intelligence</div><div class="rhythm-src">Analytics surfaces recommendations, not just insights. Systems suggest next best actions. Managers receive alerts before problems escalate.</div></div></div>
+          <div class="rhythm-row"><div class="rhythm-when">Level 5</div><div class="rhythm-body"><div class="rhythm-what" style="font-weight:500;">Agentic Workforce Intelligence</div><div class="rhythm-src">AI agents act on analytics insights autonomously — flagging risks, triggering workflows, rebalancing plans. Visier MCP and similar tools represent this frontier.</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Essential reading</div>
+          <a class="brief-link" href="https://redthreadresearch.com" target="_blank"><span class="brief-text">RedThread Research — Stacia Garr on people analytics and L&D technology</span><span class="brief-arrow">→</span></a>
+          <a class="brief-link" href="https://www.visier.com/blog/" target="_blank"><span class="brief-text">Visier Blog — workforce intelligence and agentic analytics</span><span class="brief-arrow">→</span></a>
+          <a class="brief-link" href="https://www.aihr.com/blog/people-analytics/" target="_blank"><span class="brief-text">AIHR: People Analytics — practitioner guides and frameworks</span><span class="brief-arrow">→</span></a>
+          <a class="brief-link" href="https://joshbersin.com" target="_blank"><span class="brief-text">Bersin: HR 2030 — agents with comprehensive employee data context</span><span class="brief-arrow">→</span></a>
+          <a class="brief-link" href="https://www.gartner.com/en/human-resources/topics/workforce-analytics" target="_blank"><span class="brief-text">Gartner: Workforce Analytics — trends and technology landscape</span><span class="brief-arrow">→</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="newsletter-cta"><div class="cta-text"><h3>Stay ahead in people analytics</h3><p>Weekly synthesis of workforce intelligence trends, platform moves, and practitioner frameworks.</p></div><a href="YOUR_SUBSTACK_URL" class="cta-btn" target="_blank">Subscribe free →</a></div>
+  </div>
+
+  <div id="use_cases" class="section">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">High-value analytics use cases — 2026</div>
+        <div class="insight-card" style="--ic-color:var(--coral);box-shadow:none;margin-bottom:10px;">
+          <div class="insight-name" style="font-size:13px;">Retention Risk Prediction</div>
+          <p class="insight-desc" style="font-size:12px;margin-top:4px;">Models that identify employees at risk of leaving 3–6 months before they resign. Inputs: tenure, performance trajectory, compensation vs. market, manager quality, engagement signals, absence patterns. High ROI — replacing a technical employee costs 50–200% of annual salary.</p>
+        </div>
+        <div class="insight-card" style="--ic-color:var(--accent);box-shadow:none;margin-bottom:10px;">
+          <div class="insight-name" style="font-size:13px;">Workforce Supply &amp; Demand Forecasting</div>
+          <p class="insight-desc" style="font-size:12px;margin-top:4px;">Predictive models connecting business growth plans to hiring needs, skills gaps, and internal mobility opportunities. Critical for semiconductor companies planning 18-month chip development cycles — talent constraints are known risks, not surprises.</p>
+        </div>
+        <div class="insight-card" style="--ic-color:var(--teal);box-shadow:none;margin-bottom:10px;">
+          <div class="insight-name" style="font-size:13px;">Diversity Pipeline Analytics</div>
+          <p class="insight-desc" style="font-size:12px;margin-top:4px;">Tracking representation at every stage of the talent funnel — from sourcing to offer acceptance to promotion to leadership. Identifies where and when diverse candidates are lost. HiredScore (Workday) applies AI to this problem at the screening stage.</p>
+        </div>
+        <div class="insight-card" style="--ic-color:var(--green);box-shadow:none;margin-bottom:10px;">
+          <div class="insight-name" style="font-size:13px;">Manager Effectiveness Scoring</div>
+          <p class="insight-desc" style="font-size:12px;margin-top:4px;">Correlating manager behaviors with team outcomes — engagement, retention, promotion rates, performance. Surfaces which managers are multiplying talent and which are suppressing it. Enables targeted development investments and succession planning.</p>
+        </div>
+        <div class="insight-card" style="--ic-color:var(--violet);box-shadow:none;">
+          <div class="insight-name" style="font-size:13px;">Pay Equity Analysis</div>
+          <p class="insight-desc" style="font-size:12px;margin-top:4px;">Statistical modeling that identifies unexplained pay gaps across gender, race, and other protected characteristics after controlling for legitimate factors. Increasingly required by state transparency laws. Bersin's HR 2030 vision includes AI agents that continuously monitor compensation equity without annual audit cycles.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Analytics platforms to know</div>
+        <div class="source-row"><div class="source-icon" style="background:var(--accent-light);">📊</div><div class="source-info"><div class="source-name"><a href="https://www.visier.com" target="_blank">Visier</a></div><div class="source-desc">Workforce analytics + Analytic AI Agent Platform + MCP integration — leading independent analytics vendor</div></div></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--teal-light);">🧠</div><div class="source-info"><div class="source-name"><a href="https://eightfold.ai" target="_blank">Eightfold AI</a></div><div class="source-desc">Talent intelligence platform — skills matching, talent acquisition, and internal mobility at scale</div></div></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--green-light);">🎯</div><div class="source-info"><div class="source-name"><a href="https://www.lightcast.io" target="_blank">Lightcast</a></div><div class="source-desc">Labor market intelligence — skills data, salary benchmarks, talent supply/demand by market</div></div></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--amber-light);">🔮</div><div class="source-info"><div class="source-name"><a href="https://www.draup.com" target="_blank">Draup</a></div><div class="source-desc">AI-powered talent intelligence — competitor hiring patterns, skills landscape, workforce planning</div></div></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--violet-light);">📈</div><div class="source-info"><div class="source-name"><a href="https://knoetic.com" target="_blank">Knoetic</a></div><div class="source-desc">People analytics platform built for CHROs — connects HRIS data with benchmarking</div></div></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--coral-light);">🔗</div><div class="source-info"><div class="source-name"><a href="https://www.workday.com/en-us/products/human-capital-management/workforce-planning.html" target="_blank">Workday Workforce Planning</a></div><div class="source-desc">Native HCM analytics — headcount planning, skills, diversity dashboards within Workday</div></div></div>
+        <div style="margin-top:1rem;"><a href="https://www.visier.com" target="_blank" class="pill">Visier →</a><a href="https://eightfold.ai" target="_blank" class="pill" style="margin-top:6px;">Eightfold →</a></div>
+      </div>
+    </div>
+    <div class="newsletter-cta"><div class="cta-text"><h3>Analytics use cases, real-world applications</h3><p>The Signal surfaces what's working in workforce intelligence — weekly practitioner synthesis.</p></div><a href="YOUR_SUBSTACK_URL" class="cta-btn" target="_blank">Subscribe free →</a></div>
+  </div>
+
+  <div id="sources" class="section">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Research & analysts</div>
+        <div class="source-row"><div class="source-icon" style="background:var(--teal-light);">🔴</div><div class="source-info"><div class="source-name"><a href="https://redthreadresearch.com" target="_blank">RedThread Research</a></div><div class="source-desc">Stacia Garr — people analytics, L&D tech, DEI analytics research</div></div><span class="freq-badge freq-weekly">Weekly</span></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--accent-light);">🏢</div><div class="source-info"><div class="source-name"><a href="https://www.gartner.com/en/human-resources/topics/workforce-analytics" target="_blank">Gartner Workforce Analytics</a></div><div class="source-desc">Market guides, maturity models, technology evaluation frameworks</div></div><span class="freq-badge freq-monthly">Quarterly</span></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--coral-light);">🔬</div><div class="source-info"><div class="source-name"><a href="https://joshbersin.com" target="_blank">Josh Bersin Company</a></div><div class="source-desc">HR 2030 vision, workforce intelligence, agentic analytics frameworks</div></div><span class="freq-badge freq-weekly">Weekly</span></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--green-light);">📚</div><div class="source-info"><div class="source-name"><a href="https://www.aihr.com/blog/people-analytics/" target="_blank">AIHR People Analytics</a></div><div class="source-desc">Practitioner guides — building analytics functions, data governance, KPI frameworks</div></div><span class="freq-badge freq-weekly">Weekly</span></div>
+        <div style="margin-top:1rem;"><a href="https://redthreadresearch.com" target="_blank" class="pill">RedThread →</a><a href="https://www.aihr.com/blog/people-analytics/" target="_blank" class="pill" style="margin-top:6px;">AIHR Analytics →</a></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Communities & ongoing publications</div>
+        <div class="source-row"><div class="source-icon" style="background:var(--accent-light);">🌐</div><div class="source-info"><div class="source-name"><a href="https://www.myhrfuture.com/people-analytics-world" target="_blank">People Analytics World</a></div><div class="source-desc">Annual conference and community for people analytics practitioners</div></div><span class="freq-badge freq-monthly">Quarterly</span></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--teal-light);">📊</div><div class="source-info"><div class="source-name"><a href="https://www.visier.com/blog/" target="_blank">Visier Blog</a></div><div class="source-desc">Workforce intelligence, agentic analytics, platform updates</div></div><span class="freq-badge freq-weekly">Weekly</span></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--violet-light);">🔗</div><div class="source-info"><div class="source-name"><a href="https://www.linkedin.com/groups/people-analytics" target="_blank">People Analytics LinkedIn Group</a></div><div class="source-desc">Active practitioner community — real-world implementations and challenges</div></div><span class="freq-badge freq-weekly">Weekly</span></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--amber-light);">📰</div><div class="source-info"><div class="source-name"><a href="https://www.shrm.org/topics-tools/topics/workforce-planning" target="_blank">SHRM Workforce Planning</a></div><div class="source-desc">Strategic workforce planning resources and analytics tools guidance</div></div><span class="freq-badge freq-weekly">Weekly</span></div>
+        <div style="margin-top:1rem;"><a href="https://www.visier.com/blog/" target="_blank" class="pill">Visier Blog →</a></div>
+      </div>
+    </div>
+    <div class="live-feed-panel" id="rss-panel">
+      <div class="feed-header"><span class="feed-title">Live Headlines — People Analytics</span><span class="live-dot">Live</span></div>
+      <div class="feed-tabs">
+        <button class="feed-tab active" onclick="loadFeed('bersin',this)">Josh Bersin</button>
+        <button class="feed-tab" onclick="loadFeed('redthread',this)">RedThread</button>
+        <button class="feed-tab" onclick="loadFeed('visier',this)">Visier</button>
+        <button class="feed-tab" onclick="loadFeed('aihr',this)">AIHR</button>
+        <button class="feed-tab" onclick="loadFeed('shrm',this)">SHRM</button>
+      </div>
+      <div class="feed-list" id="feed-list"><div class="feed-loading">Loading latest headlines…</div></div>
+      <div class="feed-footer-note">Live feeds refresh on every page visit · Click any headline to read the full article</div>
+    </div>
+    <div class="newsletter-cta"><div class="cta-text"><h3>Stay current in people analytics</h3><p>Weekly signal from the sources shaping workforce intelligence in 2026.</p></div><a href="YOUR_SUBSTACK_URL" class="cta-btn" target="_blank">Subscribe free →</a></div>
+  </div>
+
+  <div id="rhythm" class="section">
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Daily — 5 minutes</div>
+        <div class="rhythm-row"><div class="rhythm-when">Morning</div><div class="rhythm-body"><div class="rhythm-what">Scan HR Dive for workforce intelligence and analytics platform announcements</div><div class="rhythm-src">hrdive.com</div></div></div>
+      </div>
+      <div class="card"><div class="card-title">Weekly — 30 minutes</div>
+        <div class="rhythm-row"><div class="rhythm-when">Mon</div><div class="rhythm-body"><div class="rhythm-what">RedThread Research — Stacia Garr's latest on people analytics and L&D technology</div><div class="rhythm-src">redthreadresearch.com</div></div></div>
+        <div class="rhythm-row"><div class="rhythm-when">Wed</div><div class="rhythm-body"><div class="rhythm-what">Visier blog — agentic analytics developments and workforce intelligence use cases</div><div class="rhythm-src">visier.com/blog</div></div></div>
+        <div class="rhythm-row"><div class="rhythm-when">Fri</div><div class="rhythm-body"><div class="rhythm-what">AIHR people analytics guides — practical implementation frameworks</div><div class="rhythm-src">aihr.com/blog/people-analytics</div></div></div>
+      </div>
+      <div class="card"><div class="card-title">Monthly — 1 hour</div>
+        <div class="rhythm-row"><div class="rhythm-when">Week 1</div><div class="rhythm-body"><div class="rhythm-what">Gartner workforce analytics research — maturity models and technology guidance</div></div></div>
+        <div class="rhythm-row"><div class="rhythm-when">Week 2</div><div class="rhythm-body"><div class="rhythm-what">Review Lightcast or Draup labor market reports for skills and compensation benchmark shifts</div></div></div>
+        <div class="rhythm-row"><div class="rhythm-when">Week 3</div><div class="rhythm-body"><div class="rhythm-what">Platform updates — Visier, Eightfold, Workday workforce planning release notes</div></div></div>
+        <div class="rhythm-row"><div class="rhythm-when">Week 4</div><div class="rhythm-body"><div class="rhythm-what">Benchmark your analytics maturity — audit which use cases your org has achieved vs. best practice</div></div></div>
+      </div>
+      <div class="card"><div class="card-title">Conferences</div>
+        <div class="rhythm-row"><div class="rhythm-when">Jun 8</div><div class="rhythm-body"><div class="rhythm-what">Irresistible 2026 — people analytics and HR 2030 workforce intelligence sessions</div></div></div>
+        <div class="rhythm-row"><div class="rhythm-when">Q3 2026</div><div class="rhythm-body"><div class="rhythm-what">People Analytics World — dedicated analytics practitioner conference</div><div class="rhythm-src">myhrfuture.com/people-analytics-world</div></div></div>
+        <div class="rhythm-row"><div class="rhythm-when">Oct 2026</div><div class="rhythm-body"><div class="rhythm-what">HR Tech Conference — largest analytics platform showcase in the US</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="voices" class="section">
+    <div class="grid-3">
+      <div class="card"><div class="card-title">Key analysts & practitioners</div>
+        <div class="source-row"><div class="source-icon" style="background:var(--teal-light);font-size:12px;font-weight:500;color:var(--teal);">SG</div><div class="source-info"><div class="source-name"><a href="https://www.linkedin.com/in/staciagarr/" target="_blank">Stacia Garr</a></div><div class="source-desc">Co-founder, RedThread Research — people analytics and workforce intelligence leader</div></div></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--coral-light);font-size:12px;font-weight:500;color:var(--coral);">JB</div><div class="source-info"><div class="source-name"><a href="https://www.linkedin.com/in/joshbersin/" target="_blank">Josh Bersin</a></div><div class="source-desc">HR 2030 vision — agents with comprehensive employee data context</div></div></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--accent-light);font-size:12px;font-weight:500;color:var(--accent);">DG</div><div class="source-info"><div class="source-name"><a href="https://www.linkedin.com/in/dataguidance/" target="_blank">David Green</a></div><div class="source-desc">People analytics practitioner and MyHRFuture contributor — workforce intelligence</div></div></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--green-light);font-size:12px;font-weight:500;color:var(--green);">NR</div><div class="source-info"><div class="source-name"><a href="https://www.linkedin.com/in/naomi-titleman-cohen/" target="_blank">Naomi Titleman Cohen</a></div><div class="source-desc">Collective HR — workforce planning and analytics strategy</div></div></div>
+      </div>
+      <div class="card"><div class="card-title">Essential platforms</div>
+        <div class="source-row"><div class="source-icon" style="background:var(--accent-light);">📊</div><div class="source-info"><div class="source-name"><a href="https://www.visier.com" target="_blank">Visier</a></div><div class="source-desc">Agentic workforce intelligence — leading independent analytics platform</div></div></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--teal-light);">🧠</div><div class="source-info"><div class="source-name"><a href="https://eightfold.ai" target="_blank">Eightfold AI</a></div><div class="source-desc">Talent intelligence — skills matching and internal mobility</div></div></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--green-light);">🎯</div><div class="source-info"><div class="source-name"><a href="https://www.lightcast.io" target="_blank">Lightcast</a></div><div class="source-desc">Labor market intelligence — skills data and supply/demand analysis</div></div></div>
+        <div class="source-row"><div class="source-icon" style="background:var(--violet-light);">📈</div><div class="source-info"><div class="source-name"><a href="https://knoetic.com" target="_blank">Knoetic</a></div><div class="source-desc">People analytics for CHROs — HRIS data + benchmarking</div></div></div>
+      </div>
+      <div class="card"><div class="card-title">Core analytics concepts</div>
+        <div class="rhythm-row" style="padding:8px 0;"><div class="rhythm-body"><div class="rhythm-what" style="font-weight:500;">Workforce Planning</div><div class="rhythm-src">Connecting business strategy to talent supply and demand — headcount, skills, and timing.</div></div></div>
+        <div class="rhythm-row" style="padding:8px 0;"><div class="rhythm-body"><div class="rhythm-what" style="font-weight:500;">Flight Risk Modeling</div><div class="rhythm-src">Predicting who is likely to resign 3–6 months in advance using behavioral and performance signals.</div></div></div>
+        <div class="rhythm-row" style="padding:8px 0;"><div class="rhythm-body"><div class="rhythm-what" style="font-weight:500;">Skills Taxonomy</div><div class="rhythm-src">Structured classification of skills across the organization — foundation for internal mobility, L&D, and hiring decisions.</div></div></div>
+        <div class="rhythm-row" style="padding:8px 0;"><div class="rhythm-body"><div class="rhythm-what" style="font-weight:500;">Pay Equity Analysis</div><div class="rhythm-src">Statistical modeling identifying unexplained compensation gaps. Increasingly required by state transparency laws.</div></div></div>
+        <div class="rhythm-row" style="padding:8px 0;border-bottom:none;"><div class="rhythm-body"><div class="rhythm-what" style="font-weight:500;">Agentic Workforce Intelligence</div><div class="rhythm-src">AI agents that act on analytics insights — triggering interventions, rebalancing plans, flagging risks automatically.</div></div></div>
+      </div>
+    </div>
+    <div class="newsletter-cta" style="margin-top:16px;"><div class="cta-text"><h3>Workforce intelligence, weekly.</h3><p>The Signal synthesizes people analytics trends, platform moves, and use cases — delivered to your inbox.</p></div><a href="YOUR_SUBSTACK_URL" class="cta-btn" target="_blank">Subscribe free →</a></div>
+  </div>
+
+</main>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-main">
+      <div class="footer-left">The Signal · People Analytics · <span id="footer-date"></span></div>
+      <div class="footer-right"><a href="https://agentforchange-hr-tech.github.io/the-signal" class="footer-link">← The Signal</a>
+      <a href="https://agentforchange-hr-tech.github.io/agentforchange-hrtech/" class="footer-link">HR Tech &amp; AI →</a>
+      <a href="https://agentforchange-hr-tech.github.io/agentforchange-hrtransform/" class="footer-link">HR Transformation →</a>
+      <a href="https://www.linkedin.com/in/alexrivera1/" target="_blank" class="footer-link">LinkedIn</a></div>
+    </div>
+    <div class="footer-cta" id="footer-cta">Stay current — <a href="YOUR_SUBSTACK_URL" target="_blank">subscribe to The Signal newsletter →</a></div>
+  </div>
+</footer>
+<script>
+  const PAGE_KEY = 'analytics';
+  const RSS_FEEDS = {"bersin": {"url": "https://joshbersin.com/feed/", "label": "Josh Bersin"}, "redthread": {"url": "https://redthreadresearch.com/feed/", "label": "RedThread"}, "visier": {"url": "https://www.visier.com/feed/", "label": "Visier"}, "aihr": {"url": "https://www.aihr.com/blog/feed/", "label": "AIHR"}, "shrm": {"url": "https://www.shrm.org/rss/pages/rss.aspx", "label": "SHRM"}};
+  const SEARCH_INDEX = [{"title": "Visier Analytic AI Agent Platform", "desc": "Agentic workforce intelligence — deploy agents that act on people data", "type": "Platform", "url": "https://www.visier.com"}, {"title": "Eightfold AI", "desc": "Talent intelligence — skills matching, internal mobility, diversity", "type": "Platform", "url": "https://eightfold.ai"}, {"title": "Lightcast", "desc": "Labor market intelligence — skills data, salary benchmarks, supply/demand", "type": "Platform", "url": "https://www.lightcast.io"}, {"title": "Knoetic", "desc": "People analytics for CHROs — HRIS data plus benchmarking", "type": "Platform", "url": "https://knoetic.com"}, {"title": "Draup", "desc": "AI talent intelligence — competitor hiring patterns, skills landscape", "type": "Platform", "url": "https://www.draup.com"}, {"title": "Retention Risk Modeling", "desc": "Predicting who will resign 3–6 months in advance", "type": "Use Case", "url": null}, {"title": "Workforce Supply Forecasting", "desc": "Connecting business plans to talent needs and skills gaps", "type": "Use Case", "url": null}, {"title": "Pay Equity Analysis", "desc": "Statistical modeling of unexplained compensation gaps", "type": "Use Case", "url": null}, {"title": "Manager Effectiveness Scoring", "desc": "Correlating manager behaviors with team outcomes", "type": "Use Case", "url": null}, {"title": "Skills Taxonomy", "desc": "Structured classification of skills — foundation for mobility and L&D", "type": "Concept", "url": null}, {"title": "Analytics Maturity Model", "desc": "5 levels from operational reporting to agentic workforce intelligence", "type": "Framework", "url": null}, {"title": "Data Governance", "desc": "Clean data and governance must precede AI deployment — always", "type": "Framework", "url": null}, {"title": "Stacia Garr", "desc": "Co-founder RedThread Research — people analytics leader", "type": "Leader", "url": "https://www.linkedin.com/in/staciagarr/"}, {"title": "RedThread Research", "desc": "Stacia Garr — people analytics and L&D technology research", "type": "Source", "url": "https://redthreadresearch.com"}];
+  
+  const now = new Date();
+  const full = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const short = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  ['live-date','footer-date','hero-date','reviewed-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = id === 'live-date' ? 'Updated ' + full : id === 'footer-date' ? full : short;
+  });
+  function toggleDark() {
+    const isDark = document.body.classList.toggle('dark');
+    document.getElementById('dark-toggle').textContent = isDark ? 'Light' : 'Dark';
+    localStorage.setItem('signal-theme-' + PAGE_KEY, isDark ? 'dark' : 'light');
+  }
+  if (localStorage.getItem('signal-theme-' + PAGE_KEY) === 'dark') {
+    document.body.classList.add('dark');
+    document.getElementById('dark-toggle').textContent = 'Light';
+  }
+  function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      const btn = document.getElementById('share-btn');
+      btn.classList.add('copied'); btn.textContent = 'Copied!';
+      setTimeout(() => { btn.classList.remove('copied'); btn.textContent = 'Share'; }, 2000);
+    });
+  }
+  function showTab(id, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+  }
+  const SIGNAL_CTA_ACTIVE = false;
+  const SIGNAL_SUBSTACK_URL = 'YOUR_SUBSTACK_URL';
+  if (SIGNAL_CTA_ACTIVE) {
+    document.querySelectorAll('.newsletter-cta, .footer-cta, .meta-cta-chip').forEach(el => {
+      el.style.display = el.classList.contains('footer-cta') ? 'block' : el.classList.contains('meta-cta-chip') ? 'inline-flex' : 'flex';
+    });
+    document.querySelectorAll('[href="YOUR_SUBSTACK_URL"]').forEach(el => { el.href = SIGNAL_SUBSTACK_URL; });
+  }
+  function runSearch(q) {
+    const el = document.getElementById('search-results');
+    if (!q || q.length < 2) { el.classList.remove('visible'); return; }
+    const lower = q.toLowerCase();
+    const hits = SEARCH_INDEX.filter(i => i.title.toLowerCase().includes(lower) || i.desc.toLowerCase().includes(lower) || i.type.toLowerCase().includes(lower)).slice(0, 8);
+    el.innerHTML = hits.length ? hits.map(h => `<a class="sr-item" href="${h.url || '#'}" ${h.url ? 'target="_blank"' : ''}><span class="sr-type">${h.type}</span><div><div class="sr-title">${h.title}</div><div class="sr-desc">${h.desc}</div></div></a>`).join('') : `<div class="search-empty">No results for "${q}"</div>`;
+    el.classList.add('visible');
+  }
+  function closeSearch() { document.getElementById('search-results').classList.remove('visible'); }
+  async function fetchFeed(key, listId) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    list.innerHTML = '<div class="feed-loading">Loading headlines…</div>';
+    const feed = RSS_FEEDS[key];
+    const proxy = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}&count=8`;
+    try {
+      const res = await fetch(proxy);
+      const data = await res.json();
+      if (data.status !== 'ok' || !data.items?.length) throw new Error('empty');
+      list.innerHTML = data.items.map(item => `<a class="feed-item" href="${item.link}" target="_blank" rel="noopener noreferrer"><span class="feed-item-source">${feed.label}</span><span class="feed-item-title">${item.title}</span><span class="feed-item-date">${new Date(item.pubDate).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span></a>`).join('');
+    } catch(e) {
+      list.innerHTML = `<div class="feed-error">Live feed unavailable — <a href="${feed.url.split('/').slice(0,3).join('/')}" target="_blank" style="color:var(--accent);">visit ${feed.label} directly →</a></div>`;
+    }
+  }
+  function loadFeed(key, btn) {
+    document.querySelectorAll('#rss-panel .feed-tab').forEach(t => t.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    fetchFeed(key, 'feed-list');
+  }
+
+  window.addEventListener('DOMContentLoaded', () => fetchFeed('bersin', 'feed-list'));
+</script>
+</body>
+</html>
